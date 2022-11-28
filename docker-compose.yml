@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend-app/Dockerfile-golang
+    # ローカルポストとコンテナ内のポストをマッピングさせる
+    ports:
+      # 左:localhost:port 右:コンテナ:port
+      - 8070:8080
+    volumes:
+      # コンテナ内ではbackend-app→appに読み替えたディレクトリが作成される
+      - ./backend-app:/app
+    # mysqlが立ち上がってからbackend(go)を立ち上げるようにする
+    depends_on:
+      - "mysql"
+
+  mysql:
+    build:
+      context: .
+      dockerfile: ./mysql/Dockerfile-mysql
+    environment:
+      MYSQL_PASSWORD: "omochi"
+      MYSQL_ROOT_PASSWORD: "omochi"
+      MYSQL_DATABASE: "world"
+      TZ: "Asia/Tokyo"
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    container_name: mysql-go
+    ports:
+      - 3306:3306
+
+  # mySqlをGUIで操作するためのイメージ
+  # PMA_USER　ログインID
+  # PMA_PASSWORD パスワード
+  # MYSQL_ROOT_PASSWORD = PMA_PASSWORD AND MYSQLのID = PMA_USERにしておけば自動ログイン可
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      PMA_HOST: "mysql"
+      PMA_USER: "root"
+      PMA_PASSWORD: "omochi"
+    ports:
+      - "127.0.0.1:8080:80"

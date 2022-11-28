@@ -1,0 +1,9 @@
+FROM mysql
+
+# ポート番号
+EXPOSE 3306
+
+COPY ./mysql/DB/world.sql /docker-entrypoint-initdb.d/
+
+# mysqlの起動をデーモン化するためmysql + d(aemon)　の意味からmysqld
+CMD ["mysqld"]
